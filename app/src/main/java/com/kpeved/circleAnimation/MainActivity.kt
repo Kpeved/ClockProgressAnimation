@@ -76,14 +76,13 @@ class MainActivity : ComponentActivity() {
                                     animationAngle = it * 720f
                                 }
                             )
-
                         }
 
                         Spacer(modifier = Modifier.height(20.dp))
                         Button(
                             onClick = { showParallel = !showParallel },
                         ) {
-                            Text(if (showParallel) "Show parallel animations" else "Show single animation")
+                            Text(if (showParallel) "Show single animation" else "Show parallel animations")
                         }
                     }
                 }
