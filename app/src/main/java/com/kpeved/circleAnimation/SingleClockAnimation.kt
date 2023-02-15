@@ -103,10 +103,10 @@ fun SingleClockAnimation(duration: Int) {
 @Composable
 fun SingleClockAnimationProgress(animationAngle: Float) {
     val hours: List<Int> = remember { List(12) { it } }
+    val currentHour: Int = remember(animationAngle) { (animationAngle.toInt() / 30) }
 
     val dotsVisibility = remember(animationAngle) {
         hours.map { index ->
-            val currentHour: Int = animationAngle.toInt() / 30
             when {
                 index > currentHour -> false
                 index > currentHour - 12 -> true
@@ -131,7 +131,6 @@ fun SingleClockAnimationProgress(animationAngle: Float) {
             (animationAngle % 30) / 30
         } else -1f
     }
-    val currentHour: Int = remember(animationAngle) { (animationAngle.toInt() / 30) }
     var strokeWidth by remember { mutableStateOf(0f) }
 
 //Step 2 -  create a spacer for animation
@@ -147,7 +146,7 @@ fun SingleClockAnimationProgress(animationAngle: Float) {
             val center = Offset(size.width / 2, size.height / 2)
             val endOffset = Offset(
                 size.width / 2,
-                size.height / 2 - calculateHeight(size.height / 2, currentHour)
+                size.height / 2 - calculateArmHeight(size.height / 2, currentHour)
             )
             rotate(animationAngle, pivot = center) {
                 drawLine(
@@ -208,7 +207,7 @@ private fun angleToFraction(
     return easing.transform(progressFraction)
 }
 
-private fun calculateHeight(maxHeight: Float, currentHour: Int): Float {
+private fun calculateArmHeight(maxHeight: Float, currentHour: Int): Float {
     val stepHeight = maxHeight / 12
     // Height decreases first 360 deg, then increases again
 

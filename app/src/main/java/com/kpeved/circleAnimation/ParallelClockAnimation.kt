@@ -124,7 +124,7 @@ fun ClockAnimation(duration: Int) {
             val center = Offset(size.width / 2, size.height / 2)
             val endOffset = Offset(
                 size.width / 2,
-                size.height / 2 - calculateHeight(size.height / 2, currentHour)
+                size.height / 2 - calculateArmHeight(size.height / 2, currentHour)
             )
             rotate(clockAnimation, pivot = center) {
                 drawLine(
@@ -174,7 +174,7 @@ fun ClockAnimation(duration: Int) {
 }
 
 // Step 4 try to decrease length each 30 deg by 1 item
-private fun calculateHeight(maxHeight: Float, currentHour: Int): Float {
+private fun calculateArmHeight(maxHeight: Float, currentHour: Int): Float {
     val stepHeight = maxHeight / 12
     // Height decreases first 360 deg, then increases again
 
