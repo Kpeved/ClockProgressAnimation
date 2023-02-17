@@ -1,4 +1,4 @@
-package com.kpeved.circleAnimation
+package com.kpeved.circleAnimation.tutorial
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,14 +30,10 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kpeved.circleAnimation.ui.theme.CircleAnimationTheme
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
 
 @Preview(showBackground = true)
 @Composable
-fun ParallelClockPreview() {
+fun Step4AssembleAnimationPreview() {
     CircleAnimationTheme {
         val size = 300.dp
         Box(
@@ -45,18 +42,15 @@ fun ParallelClockPreview() {
                 .height(size)
                 .background(Color.Black)
         ) {
-            ClockAnimation(duration = 20000)
+            Step4AssembleAnimation(duration = 6000)
         }
     }
 }
 
 @Composable
-fun ClockAnimation(duration: Int) {
-    // Step 1. Set infinite animation
+fun Step4AssembleAnimation(duration: Int) {
     val infiniteTransition = rememberInfiniteTransition()
-    var strokeWidth by remember { mutableStateOf(0f) }
-
-    // Creates a child animation of float type as a part of the [InfiniteTransition].
+    // Create an infinite animation
     val animationAngle by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 720f,
@@ -66,10 +60,11 @@ fun ClockAnimation(duration: Int) {
         )
     )
 
-    var currentHour by remember { mutableStateOf(0) }
-    // Our clock is 24h. First 12h arrow decreases, next 12h arrow increases
-    val hours = remember { List(12) { it } }
+    val currentHour by remember(animationAngle) {
+        derivedStateOf { animationAngle.toInt() / 30 }
+    }
 
+    val hours = remember { List(12) { it } }
     val dotsVisibility = remember(currentHour) {
         hours.map { index ->
             when {
@@ -82,61 +77,34 @@ fun ClockAnimation(duration: Int) {
 
     val assembleAnim = remember { Animatable(-1f) }
 
-    val disassembleAnimations =
-        remember { hours.map { Animatable(1f) } }
-
-    val currentHourChannel = remember { Channel<Int>(capacity = Channel.CONFLATED) }
-    val currentHourFlow = remember(currentHourChannel) { currentHourChannel.receiveAsFlow() }
-    LaunchedEffect(animationAngle) {
-        val newCurrentHour = animationAngle.toInt() / 30
-        // WHY we have this - because LaunchedEffect is triggered after the hour is changed.
-        // That triggers the redraw of assemble position faster than the new animation started,
-        // which results in a position jump
-        // So with changing hour we have to instantly reset animation
-        if (newCurrentHour != currentHour) {
-            currentHour = newCurrentHour
-            currentHourChannel.trySend(currentHour)
-            assembleAnim.snapTo(-1f)
-        }
-    }
-    LaunchedEffect(currentHourFlow) {
-        currentHourFlow.collectLatest {
-            launch {
-                if (currentHour < 12) {
-                    assembleAnim.snapTo(-1f)
-                    disassembleAnimations[currentHour].snapTo(0f)
-                    disassembleAnimations[currentHour].animateTo(
-                        1f,
-                        tween(50 * currentHour / 2, easing = LinearOutSlowInEasing)
-                    )
-                } else {
-//                    disassembleAnimations[currentHour - 12].snapTo(-1f)
-                    assembleAnim.snapTo(0f)
-                    assembleAnim.animateTo(
-                        1f,
-                        tween(50 * (24 - currentHour), easing = LinearOutSlowInEasing)
-                    )
-                }
-            }
-        }
+    LaunchedEffect(currentHour) {
+        assembleAnim.snapTo(0f)
+        assembleAnim.animateTo(
+            1f,
+            tween(50 * (24 - currentHour), easing = LinearOutSlowInEasing)
+        )
     }
 
-    //Step 2 -  create a spacer for animation
+    var strokeWidth by remember { mutableStateOf(0f) }
+
     Spacer(modifier = Modifier
         .fillMaxSize()
+        // Set strokeWidth based on the size of the viewport
         .onGloballyPositioned {
             strokeWidth = (it.size.width / 24).toFloat()
         }
         .drawBehind {
-            val halfStroke = strokeWidth / 2
+            val halfStroke: Float = strokeWidth / 2
             val stepHeight = size.height / 24
 
-            // Step 3 - set center
             val center = Offset(size.width / 2, size.height / 2)
             val endOffset = Offset(
                 size.width / 2,
-                size.height / 2 - calculateArrowHeight(stepHeight, currentHour)
+                size.height / 2 -
+                        calculateArrowHeight(stepHeight, currentHour)
             )
+            // Rotate for 0 to 720 degrees the line around the pivot point, which is the
+            // center of the screen
             rotate(animationAngle, pivot = center) {
                 drawLine(
                     color = Color.White,
@@ -144,6 +112,7 @@ fun ClockAnimation(duration: Int) {
                     end = endOffset,
                     strokeWidth = strokeWidth,
                 )
+
                 if (assembleAnim.value != -1f) {
                     val positionY = halfStroke +
                             calculateAssembleDistance(stepHeight, currentHour) *
@@ -158,19 +127,15 @@ fun ClockAnimation(duration: Int) {
                         strokeWidth = strokeWidth
                     )
                 }
+
             }
 
             hours.forEach {
                 if (!dotsVisibility[it]) return@forEach
-
                 val degree = it * 30f
                 rotate(degree) {
-                    val positionY = halfStroke +
-                            calculateDisassembleDistance(stepHeight, currentHour) *
-                            (1 - disassembleAnimations[it].value)
-
-                    val start = Offset(size.width / 2, positionY - halfStroke)
-                    val end = Offset(size.width / 2, positionY + halfStroke)
+                    val start = Offset(size.width / 2, 0f)
+                    val end = Offset(size.width / 2, strokeWidth)
                     drawLine(
                         color = Color.White,
                         start = start,
@@ -181,10 +146,8 @@ fun ClockAnimation(duration: Int) {
             }
         }
     )
-
 }
 
-// Step 4 try to decrease length each 30 deg by 1 item
 private fun calculateArrowHeight(stepHeight: Float, currentHour: Int): Float {
     // Height decreases first 360 deg, then increases again
     return stepHeight * if (currentHour < 12) {
@@ -197,8 +160,4 @@ private fun calculateArrowHeight(stepHeight: Float, currentHour: Int): Float {
 private fun calculateAssembleDistance(stepHeight: Float, currentHour: Int): Float {
     val fixedHour = 24 - currentHour - 1
     return stepHeight * fixedHour
-}
-
-private fun calculateDisassembleDistance(stepHeight: Float, currentHour: Int): Float {
-    return stepHeight * currentHour
 }

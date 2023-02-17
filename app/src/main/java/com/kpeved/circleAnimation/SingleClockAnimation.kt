@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Slider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -103,9 +104,11 @@ fun SingleClockAnimation(duration: Int) {
 @Composable
 fun SingleClockAnimationProgress(animationAngle: Float) {
     val hours: List<Int> = remember { List(12) { it } }
-    val currentHour: Int = remember(animationAngle) { (animationAngle.toInt() / 30) }
+    val currentHour: Int by remember(animationAngle) {
+        derivedStateOf { animationAngle.toInt() / 30 }
+    }
 
-    val dotsVisibility = remember(animationAngle) {
+    val dotsVisibility = remember(currentHour) {
         hours.map { index ->
             when {
                 index > currentHour -> false
@@ -141,12 +144,13 @@ fun SingleClockAnimationProgress(animationAngle: Float) {
         }
         .drawBehind {
             val halfStroke: Float = strokeWidth / 2
+            val stepHeight = size.height / 24
 
             // Step 3 - set center
             val center = Offset(size.width / 2, size.height / 2)
             val endOffset = Offset(
                 size.width / 2,
-                size.height / 2 - calculateArmHeight(size.height / 2, currentHour)
+                size.height / 2 - calculateArrowHeight(stepHeight, currentHour)
             )
             rotate(animationAngle, pivot = center) {
                 drawLine(
@@ -157,7 +161,7 @@ fun SingleClockAnimationProgress(animationAngle: Float) {
                 )
                 if (assembleValue != -1f) {
                     val positionY = halfStroke +
-                            calculateAssembleDistance(size.height / 2, currentHour) *
+                            calculateAssembleDistance(stepHeight, currentHour) *
                             assembleValue
 
                     val start = Offset(size.width / 2, positionY - halfStroke)
@@ -176,7 +180,7 @@ fun SingleClockAnimationProgress(animationAngle: Float) {
                 val degree = it * 30f
                 rotate(degree) {
                     val positionY = halfStroke +
-                            calculateDisassembleDistance(size.height / 2, it) *
+                            calculateDisassembleDistance(stepHeight, it) *
                             (1 - dotsPositions[it])
 
                     val start = Offset(size.width / 2, positionY - halfStroke)
@@ -207,8 +211,7 @@ private fun angleToFraction(
     return easing.transform(progressFraction)
 }
 
-private fun calculateArmHeight(maxHeight: Float, currentHour: Int): Float {
-    val stepHeight = maxHeight / 12
+private fun calculateArrowHeight(stepHeight: Float, currentHour: Int): Float {
     // Height decreases first 360 deg, then increases again
 
     return stepHeight * if (currentHour < 12) {
@@ -219,13 +222,11 @@ private fun calculateArmHeight(maxHeight: Float, currentHour: Int): Float {
     }
 }
 
-private fun calculateAssembleDistance(maxHeight: Float, currentHour: Int): Float {
-    val stepHeight = maxHeight / 12
+private fun calculateAssembleDistance(stepHeight: Float, currentHour: Int): Float {
     val fixedHour = 24 - currentHour - 1
     return stepHeight * fixedHour
 }
 
-private fun calculateDisassembleDistance(maxHeight: Float, currentHour: Int): Float {
-    val stepHeight: Float = maxHeight / 12
+private fun calculateDisassembleDistance(stepHeight: Float, currentHour: Int): Float {
     return stepHeight * (currentHour)
 }
