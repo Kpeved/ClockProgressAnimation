@@ -77,6 +77,13 @@ fun Step4AssembleAnimation(duration: Int) {
 
     val assembleAnim = remember { Animatable(-1f) }
 
+    val assembleValue = remember(animationAngle) {
+        if (animationAngle >= 360) {
+            (animationAngle % 30) / 30
+        } else -1f
+    }
+
+
     LaunchedEffect(currentHour) {
         assembleAnim.snapTo(0f)
         assembleAnim.animateTo(
@@ -113,10 +120,10 @@ fun Step4AssembleAnimation(duration: Int) {
                     strokeWidth = strokeWidth,
                 )
 
-                if (assembleAnim.value != -1f) {
+                if (assembleValue != -1f) {
                     val positionY = halfStroke +
                             calculateAssembleDistance(stepHeight, currentHour) *
-                            assembleAnim.value
+                            assembleValue
 
                     val start = Offset(size.width / 2, positionY - halfStroke)
                     val end = Offset(size.width / 2, positionY + halfStroke)
