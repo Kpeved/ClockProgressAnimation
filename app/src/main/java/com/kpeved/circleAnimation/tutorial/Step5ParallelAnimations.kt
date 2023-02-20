@@ -1,4 +1,4 @@
-package com.kpeved.circleAnimation
+package com.kpeved.circleAnimation.tutorial
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -37,7 +37,7 @@ import kotlinx.coroutines.launch
 
 @Preview(showBackground = true)
 @Composable
-fun ParallelClockAnimationPreview() {
+fun Step5ParallelAnimationsPreview() {
     CircleAnimationTheme {
         val size = 300.dp
         Box(
@@ -46,13 +46,13 @@ fun ParallelClockAnimationPreview() {
                 .height(size)
                 .background(Color.Black)
         ) {
-            ParallelClockAnimation(duration = 6000)
+            Step5ParallelAnimations(duration = 6000)
         }
     }
 }
 
 @Composable
-fun ParallelClockAnimation(duration: Int) {
+fun Step5ParallelAnimations(duration: Int) {
     val infiniteTransition = rememberInfiniteTransition()
     // Create an infinite animation
     val animationAngle by infiniteTransition.animateFloat(
