@@ -150,7 +150,7 @@ fun SingleClockAnimationProgress(animationAngle: Float) {
             val center = Offset(size.width / 2, size.height / 2)
             val endOffset = Offset(
                 size.width / 2,
-                size.height / 2 - calculateArrowHeight(stepHeight, currentHour)
+                size.height / 2 - calculateClockHandLength(stepHeight, currentHour)
             )
             rotate(animationAngle, pivot = center) {
                 drawLine(
@@ -211,7 +211,7 @@ private fun angleToFraction(
     return easing.transform(progressFraction)
 }
 
-private fun calculateArrowHeight(stepHeight: Float, currentHour: Int): Float {
+private fun calculateClockHandLength(stepHeight: Float, currentHour: Int): Float {
     // Height decreases first 360 deg, then increases again
 
     return stepHeight * if (currentHour < 12) {

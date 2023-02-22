@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
                                     .size(200.dp)
                                     .background(Color.Black)
                             ) {
-                                ClockAnimation(5000)
+                                ParallelClockAnimation(5000)
                             }
                         } else {
                             Box(

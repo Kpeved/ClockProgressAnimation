@@ -88,7 +88,7 @@ fun Step3AddDots(duration: Int) {
             val endOffset = Offset(
                 size.width / 2,
                 size.height / 2 -
-                        calculateArrowHeight(stepHeight, currentHour)
+                        calculateClockHandLength(stepHeight, currentHour)
             )
             // Rotate for 0 to 720 degrees the line around the pivot point, which is the
             // center of the screen
@@ -119,7 +119,7 @@ fun Step3AddDots(duration: Int) {
     )
 }
 
-private fun calculateArrowHeight(stepHeight: Float, currentHour: Int): Float {
+private fun calculateClockHandLength(stepHeight: Float, currentHour: Int): Float {
     // Height decreases first 360 deg, then increases again
     return stepHeight * if (currentHour < 12) {
         12 - 1 - currentHour
